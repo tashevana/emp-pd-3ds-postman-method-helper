@@ -1,67 +1,66 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>3DS Method Helper</title>
+<meta charset="UTF-8" />
+<title>3DS Method Helper</title>
+<style>
+  /* Hidden iframe and form */
+  #threeDSMethodIframe {
+    display: none;
+  }
+  #threeDSMethodForm {
+    display: none;
+  }
+</style>
 </head>
 <body>
-  <iframe name="threeDSMethodIframe" style="display:none;"></iframe>
-  
-  <form id="threedsForm" method="POST" target="threeDSMethodIframe" style="display:none;">
+  <iframe id="threeDSMethodIframe" name="threeDSMethodIframe"></iframe>
+
+  <form
+    id="threeDSMethodForm"
+    method="post"
+    target="threeDSMethodIframe"
+    novalidate
+  >
     <input type="hidden" name="unique_id" id="unique_id" />
     <input type="hidden" name="signature" id="signature" />
   </form>
 
   <script>
-    // Helper: parse URL query parameters
+    // Helper to get URL query params
     function getQueryParams() {
       const params = {};
-      window.location.search.substring(1).split("&").forEach(pair => {
-        const [key, value] = pair.split("=");
-        if(key) params[decodeURIComponent(key)] = decodeURIComponent(value || "");
-      });
+      window.location.search
+        .substring(1)
+        .split("&")
+        .forEach(pair => {
+          const [key, value] = pair.split("=");
+          if (key) params[decodeURIComponent(key)] = decodeURIComponent(value || "");
+        });
       return params;
     }
 
-    // SHA512 function using SubtleCrypto API (returns hex)
-    async function sha512(message) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(message);
-      const hashBuffer = await crypto.subtle.digest('SHA-512', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    async function init() {
+    // Main logic
+    (function () {
       const params = getQueryParams();
 
-      const {
-        threeds_method_url,
-        unique_id,
-        amount,
-        timestamp,
-        merchant_password
-      } = params;
-
-      if (!threeds_method_url || !unique_id || !amount || !timestamp || !merchant_password) {
-        alert("Missing required query parameters.");
+      if (!params.threeds_method_url || !params.unique_id || !params.signature) {
+        document.body.innerHTML = "<h3>Error: Missing required parameters</h3>";
         return;
       }
 
-      const signatureString = unique_id + amount + timestamp + merchant_password;
-      const signature = await sha512(signatureString);
+      // Set form action and input values
+      const form = document.getElementById("threeDSMethodForm");
+      form.action = params.threeds_method_url;
+      document.getElementById("unique_id").value = params.unique_id;
+      document.getElementById("signature").value = params.signature;
 
-      // Set form attributes and inputs
-      const form = document.getElementById("threedsForm");
-      form.action = threeds_method_url;
-      document.getElementById("unique_id").value = unique_id;
-      document.getElementById("signature").value = signature;
-
-      // Submit form targeting hidden iframe
+      // Submit form automatically
       form.submit();
-      console.log("3DS Method form submitted.");
-    }
 
-    window.onload = init;
+      // Optionally, display a minimal message or keep blank since iframe is hidden
+      console.log("3DS Method form submitted to", params.threeds_method_url);
+    })();
   </script>
 </body>
 </html>
