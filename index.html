@@ -3,38 +3,65 @@
 <head>
   <title>3DS Method Helper</title>
 </head>
-<body onload="autoSubmit()">
-  <p>Submitting 3DS Method... If nothing happens, please check the console.</p>
-
+<body>
   <iframe name="threeDSMethodIframe" style="display:none;"></iframe>
-
-  <form id="threedsForm" method="POST" target="threeDSMethodIframe">
-    <input type="hidden" name="unique_id" />
-    <input type="hidden" name="signature" />
+  
+  <form id="threedsForm" method="POST" target="threeDSMethodIframe" style="display:none;">
+    <input type="hidden" name="unique_id" id="unique_id" />
+    <input type="hidden" name="signature" id="signature" />
   </form>
 
   <script>
-    function getParam(key) {
-      return new URLSearchParams(window.location.search).get(key);
+    // Helper: parse URL query parameters
+    function getQueryParams() {
+      const params = {};
+      window.location.search.substring(1).split("&").forEach(pair => {
+        const [key, value] = pair.split("=");
+        if(key) params[decodeURIComponent(key)] = decodeURIComponent(value || "");
+      });
+      return params;
     }
 
-    function autoSubmit() {
-      const form = document.getElementById("threedsForm");
-      const unique_id = getParam("unique_id");
-      const signature = getParam("signature");
-      const method_url = getParam("method_url");
+    // SHA512 function using SubtleCrypto API (returns hex)
+    async function sha512(message) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
-      if (!unique_id || !signature || !method_url) {
-        alert("Missing one or more required query parameters.");
+    async function init() {
+      const params = getQueryParams();
+
+      const {
+        threeds_method_url,
+        unique_id,
+        amount,
+        timestamp,
+        merchant_password
+      } = params;
+
+      if (!threeds_method_url || !unique_id || !amount || !timestamp || !merchant_password) {
+        alert("Missing required query parameters.");
         return;
       }
 
-      form.action = decodeURIComponent(method_url);
-      form.querySelector('input[name="unique_id"]').value = unique_id;
-      form.querySelector('input[name="signature"]').value = signature;
+      const signatureString = unique_id + amount + timestamp + merchant_password;
+      const signature = await sha512(signatureString);
 
+      // Set form attributes and inputs
+      const form = document.getElementById("threedsForm");
+      form.action = threeds_method_url;
+      document.getElementById("unique_id").value = unique_id;
+      document.getElementById("signature").value = signature;
+
+      // Submit form targeting hidden iframe
       form.submit();
+      console.log("3DS Method form submitted.");
     }
+
+    window.onload = init;
   </script>
 </body>
 </html>
