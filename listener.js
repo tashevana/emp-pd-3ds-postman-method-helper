@@ -8,6 +8,11 @@ const callbacks = {};
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
+// Root path to show a friendly message in browser
+app.get('/', (req, res) => {
+  res.send('3DS Callback Listener is running.');
+});
+
 // This is the callback endpoint the 3DS Method POSTs to
 app.post('/3ds-callback', (req, res) => {
   const { unique_id, threeds_method_status, signature } = req.body;
