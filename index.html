@@ -6,10 +6,13 @@
 <style>
   /* Hidden iframe and form */
   #threeDSMethodIframe {
-    display: none;
+    /* display: none; */  /* Uncomment this line to hide the iframe after testing */
+    width: 400px;
+    height: 300px;
+    border: 1px solid #ccc;
   }
   #threeDSMethodForm {
-    display: none;
+    display: none; /* Keep form hidden */
   }
 </style>
 </head>
@@ -58,7 +61,7 @@
       // Submit form automatically
       form.submit();
 
-      // Optionally, display a minimal message or keep blank since iframe is hidden
+      // Optionally, display a minimal message or keep blank since iframe is visible
       console.log("3DS Method form submitted to", params.threeds_method_url);
     })();
   </script>
