@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>3DS Method Helper</title>
+</head>
+<body onload="autoSubmit()">
+  <p>Submitting 3DS Method... If nothing happens, please check the console.</p>
+
+  <iframe name="threeDSMethodIframe" style="display:none;"></iframe>
+
+  <form id="threedsForm" method="POST" target="threeDSMethodIframe">
+    <input type="hidden" name="unique_id" />
+    <input type="hidden" name="signature" />
+  </form>
+
+  <script>
+    function getParam(key) {
+      return new URLSearchParams(window.location.search).get(key);
+    }
+
+    function autoSubmit() {
+      const form = document.getElementById("threedsForm");
+      const unique_id = getParam("unique_id");
+      const signature = getParam("signature");
+      const method_url = getParam("method_url");
+
+      if (!unique_id || !signature || !method_url) {
+        alert("Missing one or more required query parameters.");
+        return;
+      }
+
+      form.action = decodeURIComponent(method_url);
+      form.querySelector('input[name="unique_id"]').value = unique_id;
+      form.querySelector('input[name="signature"]').value = signature;
+
+      form.submit();
+    }
+  </script>
+</body>
+</html>
