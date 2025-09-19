@@ -4,26 +4,22 @@
 <meta charset="UTF-8" />
 <title>3DS Helper</title>
 <style>
-  /* Iframe and form styling */
-  #threeDSHelperIframe {
-    width: 100%;
-    height: 600px;
-    border: 1px solid #ccc;
-  }
-  #threeDSHelperForm {
-    display: none; /* Keep form hidden */
-  }
+  iframe { width: 100%; height: 600px; border: 1px solid #ccc; }
+  form { display: none; }
 </style>
 </head>
 <body>
-  <iframe id="threeDSHelperIframe" name="threeDSHelperIframe"></iframe>
-
-  <form id="threeDSHelperForm" method="post" target="threeDSHelperIframe" novalidate>
-    <input type="hidden" name="threeDSMethodData" id="threeDSMethodData" />
-  </form>
+  <div id="helperContainer">
+    <iframe id="threeDSIframe" name="threeDSIframe"></iframe>
+    
+    <form id="threeDSForm" target="threeDSIframe" method="POST" novalidate>
+      <input type="hidden" name="threeDSMethodData" id="threeDSMethodData" />
+      <input type="hidden" name="creq" id="creq" />
+      <input type="hidden" name="threeDSSessionData" id="threeDSSessionData" />
+    </form>
+  </div>
 
   <script>
-    // Parse URL query parameters
     function getQueryParams() {
       const params = {};
       window.location.search.substring(1).split("&").forEach(pair => {
@@ -33,24 +29,34 @@
       return params;
     }
 
-    (function() {
+    (function () {
       const params = getQueryParams();
-      const { redirect_url, redirect_data, redirect_type } = params;
+      const form = document.getElementById("threeDSForm");
+      const iframe = document.getElementById("threeDSIframe");
 
-      if (!redirect_url || !redirect_data || !redirect_type) {
+      if (!params.redirect_url || !params.redirect_data || !params.redirect_type) {
         document.body.innerHTML = "<h3>Error: Missing required parameters</h3>";
         return;
       }
 
-      // Set form action and input
-      const form = document.getElementById("threeDSHelperForm");
-      form.action = redirect_url;
-      document.getElementById("threeDSMethodData").value = redirect_data;
+      if (params.redirect_type === "3ds_method") {
+        form.action = params.redirect_url;
+        document.getElementById("threeDSMethodData").value = params.redirect_data;
+        form.submit();
+        console.log("3DS Method form submitted to", params.redirect_url);
+      }
 
-      // Automatically submit the form
-      form.submit();
+      else if (params.redirect_type === "3ds_challenge") {
+        form.action = params.redirect_url;
+        document.getElementById("creq").value = params.redirect_data;
+        document.getElementById("threeDSSessionData").value = ""; // optional
+        form.submit();
+        console.log("3DS Challenge form submitted to", params.redirect_url);
+      }
 
-      console.log(`3DS Helper submitted for type: ${redirect_type} to URL:`, redirect_url);
+      else {
+        console.warn("Unknown redirect_type:", params.redirect_type);
+      }
     })();
   </script>
 </body>
