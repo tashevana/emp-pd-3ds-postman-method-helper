@@ -1,55 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>IPG 3DS Method Helper</title>
+<meta charset="UTF-8" />
+<title>3DS Helper</title>
 <style>
-  #threedsIframe {
-    width: 400px;
-    height: 300px;
+  /* Iframe and form styling */
+  #threeDSHelperIframe {
+    width: 100%;
+    height: 600px;
     border: 1px solid #ccc;
   }
-  #threedsForm {
-    display: none;
+  #threeDSHelperForm {
+    display: none; /* Keep form hidden */
   }
 </style>
 </head>
 <body>
-  <h3>IPG 3DS Method Helper</h3>
-  <p>This page submits <code>threeDSMethodData</code> to the ACS in an iframe for testing.</p>
+  <iframe id="threeDSHelperIframe" name="threeDSHelperIframe"></iframe>
 
-  <iframe id="threedsIframe" name="threedsIframe"></iframe>
-
-  <form id="threedsForm" method="post" target="threedsIframe" novalidate>
+  <form id="threeDSHelperForm" method="post" target="threeDSHelperIframe" novalidate>
     <input type="hidden" name="threeDSMethodData" id="threeDSMethodData" />
   </form>
 
   <script>
+    // Parse URL query parameters
+    function getQueryParams() {
+      const params = {};
+      window.location.search.substring(1).split("&").forEach(pair => {
+        const [key, value] = pair.split("=");
+        if (key) params[decodeURIComponent(key)] = decodeURIComponent(value || "");
+      });
+      return params;
+    }
+
     (function() {
-      // Parse query parameters
-      function getQueryParams() {
-        const params = {};
-        window.location.search.substring(1).split("&").forEach(pair => {
-          const [key, value] = pair.split("=");
-          if (key) params[decodeURIComponent(key)] = decodeURIComponent(value || "");
-        });
-        return params;
-      }
-
       const params = getQueryParams();
-      const form = document.getElementById("threedsForm");
+      const { redirect_url, redirect_data, redirect_type } = params;
 
-      if (params.redirect_url && params.redirect_data) {
-        // Set form action and hidden input
-        form.action = params.redirect_url;
-        document.getElementById("threeDSMethodData").value = params.redirect_data;
-
-        // Submit form automatically
-        form.submit();
-        console.log("3DS Method submitted to", form.action);
-      } else {
-        document.body.innerHTML = "<h3>Error: Missing redirect_url or redirect_data</h3>";
+      if (!redirect_url || !redirect_data || !redirect_type) {
+        document.body.innerHTML = "<h3>Error: Missing required parameters</h3>";
+        return;
       }
+
+      // Set form action and input
+      const form = document.getElementById("threeDSHelperForm");
+      form.action = redirect_url;
+      document.getElementById("threeDSMethodData").value = redirect_data;
+
+      // Automatically submit the form
+      form.submit();
+
+      console.log(`3DS Helper submitted for type: ${redirect_type} to URL:`, redirect_url);
     })();
   </script>
 </body>
